@@ -170,7 +170,7 @@ namespace WorkBalance_.View
                 else
                 {
                     _horarioService.AtualizarHorario(PopularClasseHorario(entrada, saida));
-                    MessageBox.Show("Horário Inserido!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Horário Atualizado!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     AbrirForms();
                 }
             }

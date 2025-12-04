@@ -8,6 +8,7 @@ namespace WorkBalance_.Service
     public class HorarioService
     {
         private readonly AppDbContext _db;
+        private readonly LogErroService _logErroService;
         public HorarioService(AppDbContext db)
         {
             _db = db;
@@ -30,36 +31,49 @@ namespace WorkBalance_.Service
                 };
             }
             catch (Exception ex)
-            { MensagemErro(ex.ToString()); return null; }
+            { 
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Buscar horário fixo do usuário", ex.Message, ex.ToString());
+                return null; 
+            }
         }
 
         public TimeSpan CalcularSaldoHoras(int id)
         {
-            var HorarioFixo = HorarioFixoDoUsuario(id);
-
-            DateTime.TryParse(HorarioFixo.Entrada.ToString(), out DateTime entradaPadraoDate);
-            DateTime.TryParse(HorarioFixo.Saida.ToString(), out DateTime saidaPadraoDate);
-
-            TimeSpan horaEntradaPadrao = entradaPadraoDate.TimeOfDay;
-            TimeSpan horaSaidaPadrao = saidaPadraoDate.TimeOfDay;
-
-            TimeSpan saldoTotal = TimeSpan.Zero;
-
-            var horarios = _db.Horario.Where(h => h.UsuarioId == id).ToList();
-
-            foreach (var h in horarios)
+            try
             {
-                TimeSpan horaEntrada = h.Entrada?.TimeOfDay ?? TimeSpan.Zero;
-                TimeSpan horaSaida = h.Saida?.TimeOfDay ?? TimeSpan.Zero;
+                var HorarioFixo = HorarioFixoDoUsuario(id);
+
+                DateTime.TryParse(HorarioFixo.Entrada.ToString(), out DateTime entradaPadraoDate);
+                DateTime.TryParse(HorarioFixo.Saida.ToString(), out DateTime saidaPadraoDate);
+
+                TimeSpan horaEntradaPadrao = entradaPadraoDate.TimeOfDay;
+                TimeSpan horaSaidaPadrao = saidaPadraoDate.TimeOfDay;
+
+                TimeSpan saldoTotal = TimeSpan.Zero;
+
+                var horarios = _db.Horario.Where(h => h.UsuarioId == id).ToList();
+
+                foreach (var h in horarios)
+                {
+                    TimeSpan horaEntrada = h.Entrada?.TimeOfDay ?? TimeSpan.Zero;
+                    TimeSpan horaSaida = h.Saida?.TimeOfDay ?? TimeSpan.Zero;
 
 
-                TimeSpan diffEntrada = horaEntradaPadrao - horaEntrada;
-                TimeSpan diffSaida = horaSaida - horaSaidaPadrao;
+                    TimeSpan diffEntrada = horaEntradaPadrao - horaEntrada;
+                    TimeSpan diffSaida = horaSaida - horaSaidaPadrao;
 
-                saldoTotal += diffEntrada + diffSaida;
+                    saldoTotal += diffEntrada + diffSaida;
+                }
+
+                return saldoTotal;
             }
-
-            return saldoTotal;
+            catch (Exception ex)
+            {
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Calcular saldo de horário", ex.Message, ex.ToString());
+                return new TimeSpan();
+            }
         }
 
         public (string, string) VerificarHorario(string diaHoje, int Id)
@@ -77,7 +91,11 @@ namespace WorkBalance_.Service
                 return (entrada, saida);
             }
             catch (Exception ex)
-            { MensagemErro(ex.ToString()); return ("", ""); }
+            {
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Verificar horário", ex.Message, ex.ToString());
+                return ("","");
+            }
         }
 
         public bool InserirHorario(HorarioModel horarioModel)
@@ -91,7 +109,12 @@ namespace WorkBalance_.Service
                 _db.SaveChanges();
                 return true;
             }
-            catch (Exception ex) { MensagemErro(ex.ToString()); return false; }
+            catch (Exception ex)
+            {
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Inserir horário", ex.Message, ex.ToString());
+                return false;
+            }
         }
 
         public bool AtualizarHorario(HorarioModel horarioModel)
@@ -109,14 +132,24 @@ namespace WorkBalance_.Service
                 _db.SaveChanges();
                 return true;
             }
-            catch (Exception ex) { MensagemErro(ex.ToString()); return false; }
+            catch (Exception ex)
+            {
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Atualizar horário", ex.Message, ex.ToString());
+                return false;
+            }
         }
 
 
         public List<HorarioModel> Historico(int Id)
         {
             try { return _db.Horario.Where(h => h.UsuarioId == Id).ToList(); }
-            catch (Exception ex) { MensagemErro(ex.ToString()); return null; }
+            catch (Exception ex)
+            {
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Historico", ex.Message, ex.ToString());
+                return null;
+            }
         }
     }
 }

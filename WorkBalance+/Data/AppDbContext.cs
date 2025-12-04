@@ -9,11 +9,6 @@ namespace WorkBalance_.Data
     public class AppDbContext : DbContext
     {
         private readonly string _db;
-        public AppDbContext()
-        {
-            _db = Path.Combine(@"C:\Projetos\WorkBalance+\WorkBalance+\Data", "WorkBalance.db");
-        }
-
         public AppDbContext(string db)
         {
             _db = db;
@@ -23,5 +18,6 @@ namespace WorkBalance_.Data
 
         public DbSet<UsuarioModel> Usuario { get; set; }
         public DbSet<HorarioModel> Horario { get; set; }
+        public DbSet<LogErroModel> LogErro { get; set; }
     }
 }

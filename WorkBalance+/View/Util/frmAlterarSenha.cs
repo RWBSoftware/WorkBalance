@@ -52,7 +52,9 @@ namespace WorkBalance_.View
 
         private void VerificarCampos()
         {
-            if(txtBoxSenhaAtual.Text != Properties.Settings.Default.Senha)
+            string senhaAtual = _usuarioService.ObterSenhaAtual(Properties.Settings.Default.Id);
+
+            if(hashSenha.CriptografarSenha(txtBoxSenhaAtual.Text) != senhaAtual)
             {
                 MessageBox.Show("A senha atual está incorreta.", "Erro de Senha", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -77,7 +79,7 @@ namespace WorkBalance_.View
                 MessageBox.Show("A nova senha e a confirmação não coincidem.", "Erro de Confirmação", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            if(txtBoxSenhaNova.Text == Properties.Settings.Default.Senha)
+            if(hashSenha.CriptografarSenha(txtBoxSenhaNova.Text) == senhaAtual)
                 {
                 MessageBox.Show("A nova senha não pode ser igual à senha atual.", "Erro de Senha", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;

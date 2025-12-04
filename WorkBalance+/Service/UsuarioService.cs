@@ -10,12 +10,13 @@ namespace WorkBalance_.Service
     public class UsuarioService
     {
         private readonly AppDbContext _db;
+        private readonly LogErroService _logErroService;
         public UsuarioService(AppDbContext db)
         {
             _db = db;
         }
 
-        private void MensagemDeErro(string erro)
+        private void MensagemErro(string erro)
         {
             MessageBox.Show(erro, "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
@@ -26,7 +27,12 @@ namespace WorkBalance_.Service
             {
                 return _db.Usuario.Any(u => u.Usuario == usuario && u.Senha == senha);
             }
-            catch(Exception ex) { MensagemDeErro(ex.ToString()); return false; }
+            catch (Exception ex)
+            {
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Efetuar login", ex.Message, ex.ToString());
+                return false;
+            }
         }
 
         public int ObterUsuarioId(string usuario, string senha)
@@ -36,7 +42,12 @@ namespace WorkBalance_.Service
                 var UsuarioLogado = _db.Usuario.FirstOrDefault(u => u.Usuario == usuario && u.Senha == senha);
                 return UsuarioLogado.Id;
             }
-            catch (Exception ex) { MensagemDeErro(ex.ToString()); return 0; }
+            catch (Exception ex)
+            {
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Obter ID", ex.Message, ex.ToString());
+                return 0;
+            }
         }
 
         public bool Cadastrar(UsuarioModel usuarioModel)
@@ -49,18 +60,32 @@ namespace WorkBalance_.Service
                 _db.SaveChanges();
                 return true;
             }
-            catch (Exception ex) { MensagemDeErro(ex.ToString()); return false; }
+            catch (Exception ex)
+            {
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Cadastrar usuário", ex.Message, ex.ToString());
+                return false;
+            }
         }
 
         public HorarioDTO RetonarHorarioRegistradoPeloUsuario(int Id)
         {
-            var HorarioDoUsuario = _db.Usuario.FirstOrDefault(u => u.Id == Id);
-
-            return new HorarioDTO
+            try
             {
-                Entrada = HorarioDoUsuario.Entrada,
-                Saida = HorarioDoUsuario.Saida
-            };
+                var HorarioDoUsuario = _db.Usuario.FirstOrDefault(u => u.Id == Id);
+
+                return new HorarioDTO
+                {
+                    Entrada = HorarioDoUsuario.Entrada,
+                    Saida = HorarioDoUsuario.Saida
+                };
+            }
+            catch (Exception ex)
+            {
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Retonar Horario Registrado Pelo Usuario", ex.Message, ex.ToString());
+                return null;
+            }
         }
 
         public bool AtualizarHorarios(int Id, DateTime entrada, DateTime saida)
@@ -76,18 +101,50 @@ namespace WorkBalance_.Service
                 _db.SaveChanges();
                 return true;
             }
-            catch (Exception ex) { MensagemDeErro(ex.ToString()); return false; }
+            catch (Exception ex)
+            {
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Atualizar horário", ex.Message, ex.ToString());
+                return false;
+            }
         }
 
         public bool AtualizarSenha(int Id, string senhaNova)
         {
-            var usuarioAtual = _db.Usuario.FirstOrDefault(u => u.Id == Id);
-            if (usuarioAtual == null)
-                return false;
+            try
+            {
+                var usuarioAtual = _db.Usuario.FirstOrDefault(u => u.Id == Id);
+                if (usuarioAtual == null)
+                    return false;
 
-            usuarioAtual.Senha = senhaNova;
-            _db.SaveChanges();
-            return true;
+                usuarioAtual.Senha = senhaNova;
+                _db.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Atualizar senha", ex.Message, ex.ToString());
+                return false;
+            }
+        }
+
+        public string ObterSenhaAtual(int Id)
+        {
+            try
+            {
+                var usuarioAtual = _db.Usuario.FirstOrDefault(u => u.Id == Id);
+                if (usuarioAtual == null)
+                    return "";
+
+                return usuarioAtual.Senha;
+            }
+            catch (Exception ex)
+            {
+                MensagemErro(ex.Message);
+                _logErroService.Registrar("Obter senha", ex.Message, ex.ToString());
+                return "";
+            }
         }
 
     }
